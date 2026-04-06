@@ -191,14 +191,9 @@ def parser_file(content,mode=1,more_regex=None,no_dup=1):
             } for m in re.finditer(r,content)]
         if items != []:
             all_items.append(items)
-    if all_items != []:
-        k = []
-        for i in range(len(all_items)):
-            for ii in all_items[i]:
-                if ii not in k:
-                    k.append(ii)
-        if k != []:
-            all_items = k
+    if all_items:
+        flattened = [item for sublist in all_items for item in sublist]
+        all_items = [item for i, item in enumerate(flattened) if item not in flattened[:i]]
 
     if no_dup:
         all_matched = set()
