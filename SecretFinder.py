@@ -167,26 +167,34 @@ def getContext(matches,content,name,rex='.+?'):
     return items
 
 
+_compiled_regex = None
+
 def parser_file(content,mode=1,more_regex=None,no_dup=1):
     ''' parser file '''
+    global _compiled_regex
+    if _compiled_regex is None:
+        temp_compiled = {}
+        for k, v in _regex.items():
+            temp_compiled[k] = re.compile(v, re.VERBOSE | re.I)
+        _compiled_regex = temp_compiled
+
     if mode == 1:
         if len(content) > 1000000:
             content = content.replace(";",";\r\n").replace(",",",\r\n")
         else:
             content = jsbeautifier.beautify(content)
     all_items = []
-    for regex in _regex.items():
-        r = re.compile(regex[1],re.VERBOSE|re.I)
+    for regex_name, r in _compiled_regex.items():
         if mode == 1:
             all_matches = [(m.group(0),m.start(0),m.end(0)) for m in re.finditer(r,content)]
-            items = getContext(all_matches,content,regex[0])
+            items = getContext(all_matches,content,regex_name)
             if items != []:
                 all_items.append(items)
         else:
             items = [{
                 'matched' : m.group(0),
                 'context' : [],
-                'name'    : regex[0],
+                'name'    : regex_name,
                 'multi_context' : False
             } for m in re.finditer(r,content)]
         if items != []:
