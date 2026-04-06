@@ -173,8 +173,6 @@ def parser_file(content,mode=1,more_regex=None,no_dup=1):
         if mode == 1:
             all_matches = [(m.group(0),m.start(0),m.end(0)) for m in re.finditer(r,content)]
             items = getContext(all_matches,content,regex[0])
-            if items != []:
-                all_items.append(items)
         else:
             items = [{
                 'matched' : m.group(0),
