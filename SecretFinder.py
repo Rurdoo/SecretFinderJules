@@ -193,9 +193,12 @@ def parser_file(content,mode=1,more_regex=None,no_dup=1):
             all_items.append(items)
     if all_items != []:
         k = []
-        for i in range(len(all_items)):
-            for ii in all_items[i]:
-                if ii not in k:
+        seen = set()
+        for items in all_items:
+            for ii in items:
+                key = str(ii)
+                if key not in seen:
+                    seen.add(key)
                     k.append(ii)
         if k != []:
             all_items = k
