@@ -24,10 +24,6 @@ from html import escape
 import urllib3
 import xml.etree.ElementTree
 
-# disable warning
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 # for read local file with file:// protocol
 from requests_file import FileAdapter
 from lxml import html
@@ -364,16 +360,29 @@ def send_request(url):
     headers.update(default_headers)
     # proxy
     proxies = {}
-    if args.proxy:
-        proxies.update({
-            'http'  : args.proxy,
-            'https' : args.proxy,
-            # ftp
-        })
+    try:
+        if args.proxy:
+            proxies.update({
+                'http'  : args.proxy,
+                'https' : args.proxy,
+                # ftp
+            })
+    except NameError:
+        pass
+
+    # handle ssl verification
+    verify_ssl = True
+    try:
+        if args.insecure:
+            verify_ssl = False
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    except NameError:
+        pass
+
     try:
         resp = requests.get(
             url = url,
-            verify = False,
+            verify = verify_ssl,
             headers = headers,
             proxies = proxies
         )
@@ -394,6 +403,7 @@ if __name__ == "__main__":
     parser.add_argument("-n","--only",help="Process js url, if it contain the provided string (string;string2..)",action="store",default="")
     parser.add_argument("-H","--headers",help="Set headers (\"Name:Value\\nName:Value\")",action="store",default="")
     parser.add_argument("-p","--proxy",help="Set proxy (host:port)",action="store",default="")
+    parser.add_argument("-S","--insecure",help="Disable SSL certificate verification",action="store_true",default=False)
     args = parser.parse_args()
 
     if args.input[-1:] == "/":
