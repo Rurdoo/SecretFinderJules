@@ -25,6 +25,18 @@ class BurpExtender(IBurpExtender, IScannerCheck):
         self._callbacks = callbacks
         self._callbacks.setExtensionName("SecretFinder")
         self._callbacks.registerScannerCheck(self)
+        self.processed_regexs = []
+        for name, reg in self.regexs.items():
+            full_regex = BurpExtender.regex.replace(r'%%regex%%', reg)
+            try:
+                try:
+                    compiled_re = re.compile(full_regex, re.VERBOSE)
+                except Exception:
+                    compiled_re = re.compile(full_regex)
+                issue_name = BurpExtender.issuename % (' '.join([x.title() for x in name.split('_')]))
+                self.processed_regexs.append((compiled_re, issue_name))
+            except Exception:
+                continue
         return
 
     def consolidateDuplicateIssues(self, existingIssue, newIssue):
@@ -86,10 +98,10 @@ class BurpExtender(IBurpExtender, IScannerCheck):
         self._CustomScans = CustomScans(baseRequestResponse, self._callbacks)
 
 
-        for reg in self.regexs.items():
+        for compiled_re, issue_name in self.processed_regexs:
             tmp_issues = self._CustomScans.findRegEx(
-                BurpExtender.regex.replace(r'%%regex%%',reg[1]),
-                BurpExtender.issuename%(' '.join([x.title() for x in reg[0].split('_')])),
+                compiled_re,
+                issue_name,
                 BurpExtender.issuelevel,
                 BurpExtender.issuedetail
                 )
@@ -107,10 +119,10 @@ class BurpExtender(IBurpExtender, IScannerCheck):
         self._CustomScans = CustomScans(baseRequestResponse, self._callbacks)
 
 
-        for reg in self.regexs.items():
+        for compiled_re, issue_name in self.processed_regexs:
             tmp_issues = self._CustomScans.findRegEx(
-                BurpExtender.regex.replace(r'%%regex%%',reg[1]),
-                BurpExtender.issuename%(' '.join([x.title() for x in reg[0].split('_')])),
+                compiled_re,
+                issue_name,
                 BurpExtender.issuelevel,
                 BurpExtender.issuedetail
                 )
@@ -129,7 +141,7 @@ class CustomScans:
         self._mime_type = self._helpers.analyzeResponse(self._requestResponse.getResponse()).getStatedMimeType()
         return
 
-    def findRegEx(self, regex, issuename, issuelevel, issuedetail):
+    def findRegEx(self, myre, issuename, issuelevel, issuedetail):
         print(self._mime_type)
         if '.js' in str(self._requestResponse.getUrl()):
             print(self._mime_type)
@@ -140,10 +152,9 @@ class CustomScans:
         responseLength = len(response)
 
         if self._callbacks.isInScope(self._helpers.analyzeRequest(self._requestResponse).getUrl()):
-            myre = re.compile(regex, re.VERBOSE)
             encoded_resp=binascii.b2a_base64(self._helpers.bytesToString(response))
             decoded_resp=base64.b64decode(encoded_resp)
-            decoded_resp = saxutils.unescape(decoded_resp)
+            decoded_resp = saxutils.unescape(self._helpers.bytesToString(decoded_resp))
 
             match_vals = myre.findall(decoded_resp)
 
@@ -151,7 +162,7 @@ class CustomScans:
                 url = self._helpers.analyzeRequest(self._requestResponse).getUrl()
                 offsets = []
                 start = self._helpers.indexOf(response,
-                                    ref, True, 0, responseLength)
+                                    self._helpers.bytesToString(ref) if isinstance(ref, bytes) else ref, True, 0, responseLength)
                 offset[0] = start
                 offset[1] = start + len(ref)
                 offsets.append(offset)
