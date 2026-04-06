@@ -127,6 +127,7 @@ class CustomScans:
         self._callbacks = callbacks
         self._helpers = self._callbacks.getHelpers()
         self._mime_type = self._helpers.analyzeResponse(self._requestResponse.getResponse()).getStatedMimeType()
+        self._decoded_resp = None
         return
 
     def findRegEx(self, regex, issuename, issuelevel, issuedetail):
@@ -141,11 +142,12 @@ class CustomScans:
 
         if self._callbacks.isInScope(self._helpers.analyzeRequest(self._requestResponse).getUrl()):
             myre = re.compile(regex, re.VERBOSE)
-            encoded_resp=binascii.b2a_base64(self._helpers.bytesToString(response))
-            decoded_resp=base64.b64decode(encoded_resp)
-            decoded_resp = saxutils.unescape(decoded_resp)
+            if self._decoded_resp is None:
+                encoded_resp=binascii.b2a_base64(self._helpers.bytesToString(response))
+                decoded_resp=base64.b64decode(encoded_resp)
+                self._decoded_resp = saxutils.unescape(decoded_resp)
 
-            match_vals = myre.findall(decoded_resp)
+            match_vals = myre.findall(self._decoded_resp)
 
             for ref in match_vals:
                 url = self._helpers.analyzeRequest(self._requestResponse).getUrl()
