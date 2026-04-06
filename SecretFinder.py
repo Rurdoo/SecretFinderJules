@@ -250,9 +250,8 @@ def html_save(output):
     os.close(1)
     os.open(os.devnull,os.O_RDWR)
     try:
-        text_file = open(args.output,"wb")
-        text_file.write(_template.replace('$$content$$',output).encode('utf-8'))
-        text_file.close()
+        with open(args.output, "wb") as text_file:
+            text_file.write(_template.replace('$$content$$',output).encode('utf-8'))
 
         print('URL to access output: file://%s'%os.path.abspath(args.output))
         file = 'file:///%s'%(os.path.abspath(args.output))
