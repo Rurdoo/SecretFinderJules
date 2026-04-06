@@ -150,10 +150,7 @@ def parser_error(msg):
 def getContext(matches,content,name,rex='.+?'):
     ''' get context '''
     items = []
-    matches2 =  []
-    for  i in [x[0] for x in matches]:
-        if i not in matches2:
-            matches2.append(i)
+    matches2 = list(dict.fromkeys(x[0] for x in matches))
     for m in matches2:
         context = re.findall('%s%s%s'%(rex,m,rex),content,re.IGNORECASE)
 
