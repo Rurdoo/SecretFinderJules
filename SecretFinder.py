@@ -22,7 +22,7 @@ import string
 import random
 from html import escape
 import urllib3
-import xml.etree.ElementTree
+import defusedxml.ElementTree
 
 # for read local file with file:// protocol
 from requests_file import FileAdapter
@@ -227,7 +227,7 @@ def parser_input(input):
         items = []
 
         try:
-            items = xml.etree.ElementTree.fromstring(open(args.input,'r').read())
+            items = defusedxml.ElementTree.fromstring(open(args.input,'r').read())
         except Exception as err:
             print(err)
             sys.exit()
