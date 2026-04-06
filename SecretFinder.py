@@ -286,11 +286,16 @@ def cli_output(matched):
     for match in matched:
         print(match.get('name')+'\t->\t'+match.get('matched').encode('ascii','ignore').decode('utf-8'))
 
+import posixpath
+
 def urlParser(url):
     ''' urlParser '''
     parse = urlparse(url)
     urlParser.this_root = parse.scheme + '://' + parse.netloc
-    urlParser.this_path = parse.scheme + '://' + parse.netloc  + '/' + parse.path
+    path = posixpath.dirname(parse.path)
+    if not path.endswith('/'):
+        path += '/'
+    urlParser.this_path = parse.scheme + '://' + parse.netloc + path
 
 def extractjsurl(content,base_url):
     ''' JS url extract from html page '''
