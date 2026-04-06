@@ -18,8 +18,6 @@ import webbrowser
 import subprocess
 import base64
 import requests
-import string
-import random
 from html import escape
 import urllib3
 import xml.etree.ElementTree
@@ -407,7 +405,7 @@ if __name__ == "__main__":
     if args.regex:
         # validate regular exp
         try:
-            r = re.search(args.regex,''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(random.randint(10,50))))
+            r = re.compile(args.regex)
         except Exception as e:
             print('your python regex isn\'t valid')
             sys.exit()
